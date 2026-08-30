@@ -1,0 +1,7 @@
+# Personal learning data — never ship these
+LEARNING_LOG.md
+visuals/
+*-vault/
+__pycache__/
+*.pyc
+.agents/teachme.ts.bak
