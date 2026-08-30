@@ -4,7 +4,7 @@
 
 ![Versión](https://img.shields.io/badge/version-1.1.0-brightgreen) [![Freebuff](https://img.shields.io/badge/powered_by-Freebuff-orange)](https://github.com/nicholasgriffintn/Freebuff) [![Licencia: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **En una línea:** No hay nada que memorizar — el agente construye un grafo de dependencias en tu cabeza. Verdades incondicionales primero, cada hecho colgando de lo que ya entendés, y un quiz de 2 preguntas después de cada bloque para confirmar que el nodo está sólido antes de construir encima.
+> **En una línea:** No hay nada que memorizar — el agente construye un grafo de dependencias en tu cabeza. Verdades incondicionales primero, cada hecho colgando de lo que ya entiendes, y un quiz de 2 preguntas después de cada bloque para confirmar que el nodo está sólido antes de construir encima.
 
 ## Tabla de Contenidos
 
@@ -36,7 +36,7 @@ cd teachme
 ./bootstrap.sh
 ```
 
-Un solo comando, todo listo: instala Node.js y Freebuff si faltan, copia el agente a `~/.agents/teachme.ts`, verifica la sintaxis y la sincronización `.md ↔ .ts`, y ejecuta los tests de integridad. Es idempotente — ejecutalo las veces que quieras.
+Un solo comando, todo listo: instala Node.js y Freebuff si faltan, copia el agente a `~/.agents/teachme.ts`, verifica la sintaxis y la sincronización `.md ↔ .ts`, y ejecuta los tests de integridad. Es idempotente — ejecútalo las veces que quieras.
 
 Otros comandos:
 
@@ -60,12 +60,12 @@ node --check ~/.agents/teachme.ts
 
 ### Verificación
 
-1. Abrí Freebuff en esta carpeta:
+1. Abre Freebuff en esta carpeta:
    ```bash
    cd teachme
    freebuff
    ```
-2. Escribí:
+2. Escribe:
    ```
    @teachme enseñame qué es un hash
    ```
@@ -115,7 +115,7 @@ El agente detecta el modo automáticamente según el directorio actual.
 |---|---|---|
 | **Propósito** | Aprender un tema general (HTTPS, hashes, redes…) | Absorber el código de un proyecto existente |
 | **Cómo invocarlo** | `@teachme enseñame X` | `@teachme quiero absorber este codebase` |
-| **Dónde abrir Freebuff** | En esta carpeta (`teachme`) | Dentro del repo que querés aprender |
+| **Dónde abrir Freebuff** | En esta carpeta (`teachme`) | Dentro del repo que quieres aprender |
 | **Qué lee** | Conocimiento del agente + verificación web | Archivos del repo (`read_files`) |
 | **Cómo enseña** | Conceptos abstractos + Mermaid | Fragmentos literales (`file:line`) |
 | **Dónde queda el log** | `teachme/LEARNING_LOG.md` | En el repo (o vault centralizado) |
@@ -129,11 +129,11 @@ El agente detecta el modo automáticamente según el directorio actual.
 
 Cada sesión sigue el mismo ciclo:
 
-| Fase | Qué pasa | Qué hacés vos |
+| Fase | Qué pasa | Tu acción |
 |---|---|---|
-| **Probe** | Rondas de 2 preguntas para mapear tu nivel + una pregunta objetiva | Respondé con honestidad — "no sé" es información valiosa, no un fracaso |
-| **Plan** | Propone currículum + mapa de dependencias (Mermaid) | Revisá y dale el OK (o ajustá el alcance) |
-| **Teach** | Bloque por bloque: motivar → establecer → conectar → **quiz de 2 preguntas** | Intentá el quiz en serio; si fallás, el nodo se repara antes de seguir |
+| **Probe** | Rondas de 2 preguntas para mapear tu nivel + una pregunta objetiva | Responde con honestidad — "no sé" es información valiosa, no un fracaso |
+| **Plan** | Propone currículum + mapa de dependencias (Mermaid) | Revisa y da tu aprobación (o ajusta el alcance) |
+| **Teach** | Bloque por bloque: motivar → establecer → conectar → **quiz de 2 preguntas** | Intenta el quiz en serio; si fallas, el nodo se repara antes de seguir |
 
 ## Salida del Vault
 
@@ -145,19 +145,19 @@ Cuando la sesión termina, todo queda en `LEARNING_LOG.md`:
 - Resultados del quiz (pregunta + tu respuesta + veredicto ✓/✗)
 - Grafo de dependencias mostrando qué nodos están sólidos y cuántos necesitan refuerzo
 
-Abrí la carpeta en Obsidian y el log se renderiza con Mermaid, LaTeX y callouts nativos.
+Abre la carpeta en Obsidian y el log se renderiza con Mermaid, LaTeX y callouts nativos.
 
-> **Sesión nueva:** Los agentes se cargan al inicio de la sesión. Después de instalar o editar `teachme.ts`, abrí una **nueva** sesión de Freebuff para que los cambios tomen efecto.
+> **Sesión nueva:** Los agentes se cargan al inicio de la sesión. Después de instalar o editar `teachme.ts`, abre una **nueva** sesión de Freebuff para que los cambios tomen efecto.
 
 ## Personalización
 
-Editá la fuente canónica, luego sincronizá:
+Edita la fuente canónica, luego sincroniza:
 
-1. Editá `.agents/teachme.md` (la fuente canónica)
-2. Ejecutá `./sync-md-ts.sh` (copia los cambios del `.md` al `.ts` global)
-3. Abri una **nueva** sesión de Freebuff
+1. Edita `.agents/teachme.md` (la fuente canónica)
+2. Ejecuta `./sync-md-ts.sh` (copia los cambios del `.md` al `.ts` global)
+3. Abre una **nueva** sesión de Freebuff
 
-> **No edités `~/.agents/teachme.ts` directamente** — se sobreescribe en la próxima sincronización.
+> **No edites `~/.agents/teachme.ts` directamente** — se sobreescribe en la próxima sincronización.
 
 ## Scripts y Herramientas
 
@@ -200,7 +200,7 @@ Política (detalles en `CHANGELOG.md`):
 - **MINOR** — nueva regla o funcionalidad.
 - **MAJOR** — cambio que rompe compatibilidad (formato del log, proceso).
 
-Al editar el agente: subí `version:` en el frontmatter, agregá una entrada en `CHANGELOG.md`, sincronizá y abrí una nueva sesión de Freebuff.
+Al editar el agente: sube `version:` en el frontmatter, agrega una entrada en `CHANGELOG.md`, sincroniza y abre una nueva sesión de Freebuff.
 
 ## Changelog
 
@@ -208,8 +208,8 @@ Ver [CHANGELOG.md](CHANGELOG.md) para el historial completo.
 
 ## Contribuir
 
-Las contribuciones son bienvenidas. Hacé fork del repo, creá una feature branch y abrí un pull request. Ejecutá `./test.sh` antes de enviar.
+Las contribuciones son bienvenidas. Haz fork del repo, crea una rama de funcionalidad y abre una pull request. Ejecuta `./test.sh` antes de enviar.
 
 ---
 
-> **Nota de sincronización bilingual:** Mantené ambas versiones en idioma al sincronizar contenido. Ver [README.md](README.md) para la versión en inglés.
+> **Nota de sincronización bilingual:** Mantén ambas versiones en idioma al sincronizar contenido. Ver [README.md](README.md) para la versión en inglés.
