@@ -4,6 +4,8 @@
 
 ![Versión](https://img.shields.io/badge/version-1.1.0-brightgreen) [![Freebuff](https://img.shields.io/badge/powered_by-Freebuff-orange)](https://github.com/nicholasgriffintn/Freebuff) [![Licencia: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+# 🧠 TeachMe — Agente de Enseñanza Socrático `v1.1.0`
+
 > **En una línea:** No hay nada que memorizar — el agente construye un grafo de dependencias en tu cabeza. Verdades incondicionales primero, cada hecho colgando de lo que ya entiendes, y un quiz de 2 preguntas después de cada bloque para confirmar que el nodo está sólido antes de construir encima.
 
 ## Tabla de Contenidos

@@ -4,6 +4,8 @@
 
 ![Version](https://img.shields.io/badge/version-1.1.0-brightgreen) [![Freebuff](https://img.shields.io/badge/powered_by-Freebuff-orange)](https://github.com/nicholasgriffintn/Freebuff) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+# 🧠 TeachMe — Socratic Teaching Agent `v1.1.0`
+
 > **The one-liner:** Nothing to memorize — the agent builds a dependency graph in your head. Unconditional truths first, each fact hanging from what you already understand, and a 2-question quiz after every block to confirm the node is solid before building on top.
 
 ## Table of Contents
