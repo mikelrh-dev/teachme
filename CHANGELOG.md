@@ -6,6 +6,17 @@ La versión canónica vive en el frontmatter de `.agents/teachme.md` (`version:`
 Cada cambio debe: (1) subir la versión aquí y en el frontmatter, (2) pasar por
 `./sync-md-ts.sh` para estamparse en el `.ts` instalado.
 
+## [Unreleased]
+
+### Added
+
+- **Documentación bilingual** — `README.md` (inglés por defecto) y `README.es.md`
+  (espejo en español) con estructura de 13 secciones idénticas, badges de
+  idioma enlaces bidireccionales, tabla de contenidos con 12 anchors, y notas
+  de sincronización bilingual al pie de cada archivo.
+- **Assets visuales** — 5 imágenes generadas en `docs/images/` (hero,
+  architecture, modes, flow, vault) referenciadas en ambos README.
+
 ## [1.1.0] — 2026-08-30
 
 ### Added
