@@ -17,6 +17,15 @@ Cada cambio debe: (1) subir la versión aquí y en el frontmatter, (2) pasar por
 - **Assets visuales** — 5 imágenes generadas en `docs/images/` (hero,
   architecture, modes, flow, vault) referenciadas en ambos README.
 
+## [1.2.0] — 2026-08-31
+
+### Added
+
+- **Esquema rápido de repaso** — cuarta opción en el cierre de sesión: un
+  single-file schema (~60 líneas) que compila verdad nuclear, piezas, flujo,
+  trampas frecuentes y flashcards. Recomendado para temas cortos (1–3 bloques).
+  Template en `templates/esquema-schema.md`.
+
 ## [1.1.0] — 2026-08-30
 
 ### Added

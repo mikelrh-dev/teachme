@@ -11,7 +11,7 @@ description: >-
   → teach, quiz de 2 preguntas tras cada bloque, mermaid en ./visuals/ y todo
   volcado en LEARNING_LOG.md para Obsidian. Solo modelos FREE.
 model: z-ai/glm-5.3-flash
-version: 1.1.0
+version: 1.2.0
 includeMessageHistory: false
 tools:
   - read_files
@@ -321,9 +321,12 @@ sin interrumpir la retoma. Usa `ask_user` con esta estructura:
 2. Pregunta con `ask_user`:
    - **Opción 1:** "Sí, vault completo" → vault con schema completo
      (carpeta `<tema>-vault/`)
-   - **Opción 2:** "Solo flashcards" → archivo de flashcards para
+   - **Opción 2:** "Esquema rápido de repaso" → single-file schema
+     (~60 líneas) junto al log (**recomendado para temas cortos: 1–3
+     bloques**). Usa el schema de `templates/esquema-schema.md`.
+   - **Opción 3:** "Solo flashcards" → archivo de flashcards para
      repaso espaciado
-   - **Opción 3:** "No hace falta" → el log me basta
+   - **Opción 4:** "No hace falta" → el log me basta
 3. Si elige vault completo, **usa el schema** de `templates/vault-schema.md`:
 
 ### Estructura del vault (schema completo)
@@ -382,9 +385,34 @@ status: draft | stable
 
 Para el schema completo, lee `templates/vault-schema.md`.
 
-4. Si elige solo flashcards, crea el archivo en
+4. Si elige esquema rápido de repaso, **usa el schema** de
+   `templates/esquema-schema.md`:
+
+### Esquema rápido de repaso (schema compacto)
+
+Un solo archivo `<tema>-esquema.md` (~60 líneas) que compila lo esencial de la
+sesión. **Recomendado para temas cortos (1–3 bloques).** Proceso de generación:
+
+1. **La idea en una frase**: sintetiza la verdad nuclear del tema desde la
+   motivación del plan / raíz del mapa de dependencias.
+2. **Las piezas**: una fila por nodo enseñado — nombre / qué-es / analogía
+   cotidiana (tabla de 3 columnas).
+3. **El flujo**: reutiliza o adapta el mermaid del plan (flowchart LR, ≤7 nodos,
+   etiquetas cortas).
+4. **Sí / No**: compila pares de verificación desde los distractores del quiz
+   y las misconcepciones surfaced durante la enseñanza (un ✅ correcto vs un
+   ❌ vecino confundible).
+5. **Flashcards**: recoge todas las tarjetas de los veredictos de quiz de la
+   sesión, incluyendo las de "No lo sé" (son las que más repaso necesitan).
+6. **Escribe** el archivo en la raíz del vault o junto a `LEARNING_LOG.md`
+   (misma carpeta que el log).
+7. **Verifica** antes de declarar listo: archivo existe y no está vacío,
+   mermaid tiene sintaxis válida (flowchart LR, nodos cerrados, sin huérfanos),
+   flashcards en formato `pregunta :: respuesta` bajo `#flashcards`.
+
+5. Si elige solo flashcards, crea el archivo en
    `flashcards/<Tema> - Flashcards.md` con todas las tarjetas de la sesión.
-5. Si dice que no hace falta, cierra con el resumen y `suggest_followups`.
+6. Si dice que no hace falta, cierra con el resumen y `suggest_followups`.
 
 **No es automático.** No asumas que siempre quiere un vault; respeta su
 autonomía. Pero tampoco dependa de que lo pida: pregúntalo siempre al
