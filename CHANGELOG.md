@@ -17,6 +17,15 @@ Cada cambio debe: (1) subir la versión aquí y en el frontmatter, (2) pasar por
 - **Assets visuales** — 5 imágenes generadas en `docs/images/` (hero,
   architecture, modes, flow, vault) referenciadas en ambos README.
 
+## [1.2.1] — 2026-09-03
+
+### Fixed
+
+- **Instalación portable** — el helper fuerza salida UTF-8 para no fallar en
+  consolas Windows `cp1252`, resuelve Python desde `PATH` y genera el agente
+  `.ts` desde el `.md` canónico cuando falta la fuente TypeScript local.
+  Los checks cubren generación y una instalación limpia aislada.
+
 ## [1.2.0] — 2026-08-31
 
 ### Added

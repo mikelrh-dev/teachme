@@ -21,9 +21,21 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 AGENTS_DIR="$HOME/.agents"
 AGENT_FILE="$AGENTS_DIR/teachme.ts"
-SOURCE_FILE="$(dirname "$0")/.agents/teachme.ts"
+SOURCE_FILE="$SCRIPT_DIR/.agents/teachme.ts"
+HELPER="$SCRIPT_DIR/sync_helper.py"
+
+find_python() {
+    if command -v python >/dev/null 2>&1; then
+        command -v python
+    elif command -v python3 >/dev/null 2>&1; then
+        command -v python3
+    else
+        return 1
+    fi
+}
 
 # ─── Funciones ────────────────────────────────────────────────
 
@@ -71,21 +83,26 @@ install_agent() {
     echo ""
     echo "Instalando teachme..."
     
-    # Verificar que existe el archivo fuente
-    if [ ! -f "$SOURCE_FILE" ]; then
-        print_error "No se encontró el agente en: $SOURCE_FILE"
-        print_warn "Ejecuta este script desde la carpeta teachme/"
-        exit 1
-    fi
-    
     # Crear carpeta ~/.agents si no existe
     if [ ! -d "$AGENTS_DIR" ]; then
         mkdir -p "$AGENTS_DIR"
         print_ok "Creada carpeta $AGENTS_DIR"
     fi
     
-    # Copiar el agente
-    cp "$SOURCE_FILE" "$AGENT_FILE"
+    # Prefer the legacy TypeScript source when present; otherwise generate it
+    # from the canonical Markdown source so a clean checkout is installable.
+    if [ -f "$SOURCE_FILE" ]; then
+        cp "$SOURCE_FILE" "$AGENT_FILE"
+    else
+        PYTHON_CMD=$(find_python) || {
+            print_error "Python no encontrado; es necesario para generar el agente desde teachme.md"
+            exit 1
+        }
+        if ! "$PYTHON_CMD" "$HELPER" --generate --output "$AGENT_FILE"; then
+            print_error "No se pudo generar el agente desde: $SCRIPT_DIR/.agents/teachme.md"
+            exit 1
+        fi
+    fi
     print_ok "Agente instalado en: $AGENT_FILE"
     
     # Verificar que Freebuff puede cargarlo
@@ -99,7 +116,7 @@ install_agent() {
     echo -e "${GREEN}¡Instalación completa!${NC}"
     echo ""
     echo "Para usar el agente:"
-    echo "  1. Abre Freebuff en esta carpeta: cd $(dirname "$0") && freebuff"
+    echo "  1. Abre Freebuff en esta carpeta: cd $SCRIPT_DIR && freebuff"
     echo "  2. Escribe: @teachme enséñame qué es un hash"
     echo ""
     echo "Si ya tenías Freebuff abierto, cierra y abre una sesión nueva."
@@ -118,6 +135,7 @@ check_installation() {
             print_ok "Sintaxis correcta"
         else
             print_error "Error de sintaxis"
+            return 1
         fi
     else
         print_error "Agente no encontrado en: $AGENT_FILE"
@@ -133,7 +151,7 @@ check_installation() {
     fi
     
     echo ""
-    echo "Para probar: cd $(dirname "$0") && freebuff"
+    echo "Para probar: cd $SCRIPT_DIR && freebuff"
     echo "Luego escribe: @teachme enséñame qué es un hash"
 }
 

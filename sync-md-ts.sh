@@ -30,13 +30,14 @@ print_ok() { echo -e "${GREEN}✓${NC} $1"; }
 print_error() { echo -e "${RED}✗${NC} $1"; }
 print_info() { echo -e "${CYAN}→${NC} $1"; }
 
-# Ruta de Python (ajustar si es necesario)
-PYTHON_CMD="/c/Users/mikel/AppData/Local/Programs/Python/Python310/python"
-
-# Verificar que funciona
-if ! "$PYTHON_CMD" --version &> /dev/null 2>&1; then
-    print_error "Python no encontrado en: $PYTHON_CMD"
-    print_info "Edita este script y cambia PYTHON_CMD"
+# Resolver Python desde PATH para funcionar en Windows, macOS y Linux.
+if command -v python >/dev/null 2>&1; then
+    PYTHON_CMD=$(command -v python)
+elif command -v python3 >/dev/null 2>&1; then
+    PYTHON_CMD=$(command -v python3)
+else
+    print_error "Python no encontrado en PATH"
+    print_info "Instala Python 3 y vuelve a ejecutar este script"
     exit 1
 fi
 
@@ -59,15 +60,15 @@ case "${1:-}" in
         echo "  --help, -h    Muestra esta ayuda"
         ;;
     --check|-c)
-        $PYTHON_CMD "$HELPER" --check
+        "$PYTHON_CMD" "$HELPER" --check
         ;;
     --version|-v)
-        $PYTHON_CMD "$HELPER" --version
+        "$PYTHON_CMD" "$HELPER" --version
         ;;
     --dry-run|-n)
-        $PYTHON_CMD "$HELPER" --dry-run
+        "$PYTHON_CMD" "$HELPER" --dry-run
         ;;
     *)
-        $PYTHON_CMD "$HELPER"
+        "$PYTHON_CMD" "$HELPER"
         ;;
 esac

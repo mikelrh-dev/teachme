@@ -2,9 +2,9 @@
 
 ![TeachMe — Arquitectura del agente de enseñanza socrática](docs/images/hero.png)
 
-![Versión](https://img.shields.io/badge/version-1.1.0-brightgreen) [![Freebuff](https://img.shields.io/badge/powered_by-Freebuff-orange)](https://github.com/nicholasgriffintn/Freebuff) [![Licencia: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Versión](https://img.shields.io/badge/version-1.2.1-brightgreen) [![Freebuff](https://img.shields.io/badge/powered_by-Freebuff-orange)](https://github.com/nicholasgriffintn/Freebuff) [![Licencia: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-# 🧠 TeachMe — Agente de Enseñanza Socrático `v1.1.0`
+# 🧠 TeachMe — Agente de Enseñanza Socrático `v1.2.1`
 
 > **En una línea:** No hay nada que memorizar — el agente construye un grafo de dependencias en tu cabeza. Verdades incondicionales primero, cada hecho colgando de lo que ya entiendes, y un quiz de 2 preguntas después de cada bloque para confirmar que el nodo está sólido antes de construir encima.
 
@@ -27,6 +27,7 @@
 
 - **Node.js** ≥ 18 (Freebuff lo necesita — el script de bootstrap lo instala si falta)
 - **Freebuff** instalado ([repo](https://github.com/nicholasgriffintn/Freebuff))
+- **Python** 3 (se usa para generar y sincronizar el agente)
 - **Obsidian** (opcional): para renderizar Mermaid, LaTeX y callouts en el vault de aprendizaje
 
 ## Inicio Rápido
@@ -38,7 +39,7 @@ cd teachme
 ./bootstrap.sh
 ```
 
-Un solo comando, todo listo: instala Node.js y Freebuff si faltan, copia el agente a `~/.agents/teachme.ts`, verifica la sintaxis y la sincronización `.md ↔ .ts`, y ejecuta los tests de integridad. Es idempotente — ejecútalo las veces que quieras.
+Un solo comando, todo listo: instala Node.js y Freebuff si faltan, copia o genera el agente en `~/.agents/teachme.ts`, verifica la sintaxis y la sincronización `.md ↔ .ts`, y ejecuta los tests de integridad. Es idempotente — ejecútalo las veces que quieras.
 
 Otros comandos:
 
@@ -50,13 +51,10 @@ Otros comandos:
 ### Opción B — Instalación manual
 
 ```bash
-# 1. Crear la carpeta global si no existe
-mkdir -p ~/.agents
+# Instalar desde la fuente Markdown canónica
+./install.sh
 
-# 2. Copiar el agente
-cp .agents/teachme.ts ~/.agents/
-
-# 3. Verificar sintaxis
+# El instalador genera ~/.agents/teachme.ts cuando no existe una fuente .ts local
 node --check ~/.agents/teachme.ts
 ```
 
@@ -182,7 +180,7 @@ Edita la fuente canónica, luego sincroniza:
 Resultado esperado:
 
 ```
-✓ Passed: 38
+✓ Passed: 43
 ✗ Failed: 0
 ○ Skipped: 0
 ```

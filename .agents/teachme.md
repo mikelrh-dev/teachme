@@ -11,7 +11,7 @@ description: >-
   → teach, quiz de 2 preguntas tras cada bloque, mermaid en ./visuals/ y todo
   volcado en LEARNING_LOG.md para Obsidian. Solo modelos FREE.
 model: z-ai/glm-5.3-flash
-version: 1.2.0
+version: 1.2.1
 includeMessageHistory: false
 tools:
   - read_files
@@ -458,7 +458,7 @@ Reglas de higiene:
 1. Al editar el `.md`, sube `version:` en el MISMO cambio.
 2. Añade una entrada en `CHANGELOG.md` (fecha, versión, qué cambió y por qué).
 3. Ejecuta `./sync-md-ts.sh` — el helper estampa la versión en la cabecera del
-   `.ts` instalado (`@teachme v1.1.0`).
+   `.ts` instalado (`@teachme v1.2.1`).
 4. `./sync-md-ts.sh --version` muestra la versión de la fuente y la instalada;
    si difieren, algo quedó a medias.
 5. Abre una sesión nueva de Freebuff para que la versión nueva cargue.

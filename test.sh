@@ -31,6 +31,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 MD_FILE="$SCRIPT_DIR/.agents/teachme.md"
 TS_GLOBAL="$HOME/.agents/teachme.ts"
 TS_BAK="$HOME/.agents/teachme.ts.bak"
+TEMP_HOME="$(mktemp -d 2>/dev/null || mktemp -d -t teachme)"
 INSTALL_SH="$SCRIPT_DIR/install.sh"
 SYNC_SH="$SCRIPT_DIR/sync-md-ts.sh"
 SYNC_PY="$SCRIPT_DIR/sync_helper.py"
@@ -93,11 +94,16 @@ else
     fail "teachme.md no existe"
 fi
 
+cleanup() {
+    rm -rf "$TEMP_HOME"
+}
+trap cleanup EXIT
+
 # teachme.ts global
 if [ -f "$TS_GLOBAL" ]; then
     pass "teachme.ts global existe"
 else
-    fail "teachme.ts global no existe (¿instalado?)"
+    skip "teachme.ts global no existe (se instala con ./install.sh)"
 fi
 
 # LEARNING_LOG.md
@@ -250,16 +256,46 @@ if [ -f "$MD_FILE" ]; then
     fi
 fi
 
+# Generación desde un checkout limpio (no usa ni modifica el agente global).
+if PYTHON_CMD=$(command -v python 2>/dev/null); then
+    :
+elif PYTHON_CMD=$(command -v python3 2>/dev/null); then
+    :
+else
+    PYTHON_CMD=""
+fi
+if [ -n "$PYTHON_CMD" ]; then
+    GENERATED_TS="$TEMP_HOME/.agents/teachme.ts"
+    if "$PYTHON_CMD" "$SYNC_PY" --generate --output "$GENERATED_TS" >/dev/null 2>&1 \
+        && node --check "$GENERATED_TS" >/dev/null 2>&1 \
+        && grep -q "^  id: 'teachme'" "$GENERATED_TS" \
+        && grep -q "^  model: 'z-ai/glm-5.3-flash'" "$GENERATED_TS" \
+        && "$PYTHON_CMD" "$SYNC_PY" --check --output "$GENERATED_TS" >/dev/null 2>&1; then
+        pass "Generación desde .md en checkout limpio funciona"
+    else
+        fail "Generación desde .md en checkout limpio falló"
+    fi
+else
+    skip "Generación en checkout limpio (Python no disponible)"
+fi
+
+# El helper debe poder imprimir Unicode aunque Python herede cp1252.
+if [ -n "$PYTHON_CMD" ]; then
+    if PYTHONIOENCODING=cp1252 "$PYTHON_CMD" "$SYNC_PY" --help >/dev/null 2>&1; then
+        pass "sync_helper.py --help funciona con consola Windows cp1252"
+    else
+        fail "sync_helper.py --help falla con consola Windows cp1252"
+    fi
+else
+    skip "Prueba de consola cp1252 (Python no disponible)"
+fi
+
 section "4. Sincronización .md ↔ .ts"
 
 if [ -f "$TS_GLOBAL" ] && [ -f "$MD_FILE" ]; then
     # Validación robusta vía sync_helper.py --check (compara instructionsPrompt normalizado)
     if [ -f "$SYNC_PY" ]; then
-        PYTHON_CMD="/c/Users/mikel/AppData/Local/Programs/Python/Python310/python"
-        if [ ! -x "$PYTHON_CMD" ]; then
-            PYTHON_CMD="python"
-        fi
-        if $PYTHON_CMD "$SYNC_PY" --check >/dev/null 2>&1; then
+        if [ -n "$PYTHON_CMD" ] && "$PYTHON_CMD" "$SYNC_PY" --check >/dev/null 2>&1; then
             pass "Sincronizado: .md y .ts coinciden (sync_helper --check)"
         else
             # Fallback: conteo de menciones para diagnóstico
@@ -287,14 +323,33 @@ section "5. Prueba de scripts (dry-run)"
 
 # install.sh --check
 if [ -f "$INSTALL_SH" ] && [ -x "$INSTALL_SH" ]; then
-    OUTPUT=$("$INSTALL_SH" --check 2>&1)
-    if echo "$OUTPUT" | grep -q "Agente encontrado\|Sintaxis correcta"; then
-        pass "install.sh --check funciona"
+    if OUTPUT=$("$INSTALL_SH" --check 2>&1); then
+        if echo "$OUTPUT" | grep -q "Agente encontrado\|Sintaxis correcta"; then
+            pass "install.sh --check funciona"
+        else
+            fail "install.sh --check falló"
+        fi
     else
-        fail "install.sh --check falló"
+        skip "install.sh --check requiere instalación previa"
     fi
 else
     skip "install.sh no disponible"
+fi
+
+# install.sh debe generar el agente cuando no existe una fuente .ts local.
+CLEAN_HOME="$TEMP_HOME/clean-home"
+if [ -n "$PYTHON_CMD" ] && [ -f "$INSTALL_SH" ] && [ -x "$INSTALL_SH" ]; then
+    if HOME="$CLEAN_HOME" "$INSTALL_SH" --check >/dev/null 2>&1; then
+        fail "install.sh --check no detectó un agente ausente"
+    elif HOME="$CLEAN_HOME" "$INSTALL_SH" >/dev/null 2>&1 \
+        && node --check "$CLEAN_HOME/.agents/teachme.ts" >/dev/null 2>&1 \
+        && HOME="$CLEAN_HOME" "$PYTHON_CMD" "$SYNC_PY" --check --output "$CLEAN_HOME/.agents/teachme.ts" >/dev/null 2>&1; then
+        pass "install.sh genera el agente desde .md en una instalación limpia"
+    else
+        fail "install.sh no genera el agente en una instalación limpia"
+    fi
+else
+    skip "Instalación limpia (Python/install.sh no disponible)"
 fi
 
 # sync-md-ts.sh --dry-run

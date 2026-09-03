@@ -2,9 +2,9 @@
 
 ![TeachMe — Socratic teaching agent architecture](docs/images/hero.png)
 
-![Version](https://img.shields.io/badge/version-1.1.0-brightgreen) [![Freebuff](https://img.shields.io/badge/powered_by-Freebuff-orange)](https://github.com/nicholasgriffintn/Freebuff) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Version](https://img.shields.io/badge/version-1.2.1-brightgreen) [![Freebuff](https://img.shields.io/badge/powered_by-Freebuff-orange)](https://github.com/nicholasgriffintn/Freebuff) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-# 🧠 TeachMe — Socratic Teaching Agent `v1.1.0`
+# 🧠 TeachMe — Socratic Teaching Agent `v1.2.1`
 
 > **The one-liner:** Nothing to memorize — the agent builds a dependency graph in your head. Unconditional truths first, each fact hanging from what you already understand, and a 2-question quiz after every block to confirm the node is solid before building on top.
 
@@ -27,6 +27,7 @@
 
 - **Node.js** ≥ 18 (Freebuff needs it — the bootstrap script installs it if missing)
 - **Freebuff** installed ([repo](https://github.com/nicholasgriffintn/Freebuff))
+- **Python** 3 (used to generate and synchronize the agent)
 - **Obsidian** (optional): for rendering Mermaid, LaTeX, and callouts in the learning vault
 
 ## Quick Start
@@ -38,7 +39,7 @@ cd teachme
 ./bootstrap.sh
 ```
 
-One command, everything ready: installs Node.js and Freebuff if missing, copies the agent to `~/.agents/teachme.ts`, verifies syntax and `.md ↔ .ts` sync, and runs integrity tests. It is idempotent — run it as many times as you want.
+One command, everything ready: installs Node.js and Freebuff if missing, copies or generates the agent at `~/.agents/teachme.ts`, verifies syntax and `.md ↔ .ts` sync, and runs integrity tests. It is idempotent — run it as many times as you want.
 
 Other commands:
 
@@ -50,13 +51,10 @@ Other commands:
 ### Option B — Manual installation
 
 ```bash
-# 1. Create global folder if it doesn't exist
-mkdir -p ~/.agents
+# Install from the canonical Markdown source
+./install.sh
 
-# 2. Copy the agent
-cp .agents/teachme.ts ~/.agents/
-
-# 3. Verify syntax
+# The installer generates ~/.agents/teachme.ts when the local .ts source is absent
 node --check ~/.agents/teachme.ts
 ```
 
@@ -182,7 +180,7 @@ Edit the canonical source, then sync:
 Expected result:
 
 ```
-✓ Passed: 38
+✓ Passed: 43
 ✗ Failed: 0
 ○ Skipped: 0
 ```

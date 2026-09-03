@@ -1,175 +1,294 @@
 #!/usr/bin/env python3
 """
-sync_helper.py — Sincroniza teachme.md → teachme.ts
+sync_helper.py - Syncs teachme.md into the installed teachme.ts agent.
 
-Extrae el contenido del .md (sin frontmatter) y lo inserta
-en el instructionsPrompt del .ts.
+The Markdown file is canonical. The helper can update an existing agent or
+build one from the Markdown frontmatter when no checked-in TypeScript source is
+available.
 """
 
-import re
-import sys
 import os
+import re
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
+
+# Windows commonly starts Python with the cp1252 console encoding. The source
+# and generated agent are UTF-8, so command output must not depend on the shell.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
+def extract_frontmatter(md_path: str) -> str:
+    """Return the YAML frontmatter block from the canonical Markdown file."""
+    with open(md_path, "r", encoding="utf-8") as file:
+        content = file.read()
+    match = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", content, re.DOTALL)
+    return match.group(1) if match else ""
+
+
+def extract_frontmatter_value(frontmatter: str, key: str) -> str:
+    """Read a simple scalar frontmatter value."""
+    match = re.search(rf"^{re.escape(key)}:\s*(.*?)\s*$", frontmatter, re.MULTILINE)
+    return match.group(1).strip() if match else ""
+
+
+def extract_md_description(md_path: str) -> str:
+    """Read a folded or scalar description for the agent spawner prompt."""
+    frontmatter = extract_frontmatter(md_path)
+    lines = frontmatter.splitlines()
+    description_lines = []
+    reading_description = False
+
+    for line in lines:
+        if re.match(r"^description:\s*>-?\s*$", line):
+            reading_description = True
+            continue
+        if reading_description:
+            if line.startswith((" ", "\t")):
+                description_lines.append(line.strip())
+                continue
+            break
+
+    if description_lines:
+        return " ".join(line for line in description_lines if line)
+    return extract_frontmatter_value(frontmatter, "description")
+
+
+def extract_md_tools(md_path: str) -> list[str]:
+    """Read tool names from the frontmatter tools list."""
+    frontmatter = extract_frontmatter(md_path)
+    lines = frontmatter.splitlines()
+    tools = []
+    reading_tools = False
+
+    for line in lines:
+        if re.match(r"^tools:\s*$", line):
+            reading_tools = True
+            continue
+        if reading_tools:
+            match = re.match(r"^\s+-\s+([A-Za-z0-9_]+)\s*$", line)
+            if match:
+                tools.append(match.group(1))
+                continue
+            if line.strip():
+                break
+
+    return tools
+
+
+def escape_ts_single_quote(value: str) -> str:
+    """Escape a value for a single-quoted TypeScript string literal."""
+    return value.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
+
+
+def escape_ts_template(value: str) -> str:
+    """Escape Markdown for a TypeScript template literal."""
+    return value.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
+
+
+def generate_ts(md_path: str, ts_path: str) -> None:
+    """Generate a Freebuff AgentDefinition from the canonical Markdown source."""
+    frontmatter = extract_frontmatter(md_path)
+    name = extract_frontmatter_value(frontmatter, "name")
+    model = extract_frontmatter_value(frontmatter, "model")
+    version = extract_frontmatter_value(frontmatter, "version")
+    include_history_value = extract_frontmatter_value(frontmatter, "includeMessageHistory").lower()
+    include_history = "true" if include_history_value == "true" else "false"
+    description = extract_md_description(md_path)
+    tools = extract_md_tools(md_path)
+    body = extract_md_content(md_path)
+
+    if not name or not model or not version or not description or not tools or not body:
+        raise ValueError("El frontmatter o el contenido del .md están incompletos")
+
+    tool_lines = ",\n".join(
+        f"    '{escape_ts_single_quote(tool)}'" for tool in tools
+    )
+    generated = f"""// TeachMe - generated from .agents/teachme.md
+// @teachme v{version}
+//
+// This file is generated. Edit .agents/teachme.md and run the installer or sync helper.
+
+const definition = {{
+  id: '{escape_ts_single_quote(name)}',
+  displayName: 'TeachMe',
+  model: '{escape_ts_single_quote(model)}',
+  includeMessageHistory: {include_history},
+  toolNames: [
+{tool_lines},
+  ],
+  spawnerPrompt: '{escape_ts_single_quote(description)}',
+  systemPrompt: 'Eres TeachMe, un profesor socrático personal. El que aprende es el USUARIO: tú enseñas; tú no aprendes. Tu único trabajo es construir un grafo de dependencias mental en su cabeza. No implementes código salvo los artefactos pedagógicos: LEARNING_LOG.md y ./visuals/*.mmd.',
+  instructionsPrompt: `{escape_ts_template(body)}`,
+}}
+
+export default definition
+"""
+
+    target = Path(ts_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=target.parent, delete=False
+    ) as temp:
+        temp.write(generated)
+        temp_path = Path(temp.name)
+    os.replace(temp_path, target)
+
+
 def extract_md_version(md_path: str) -> str:
-    """Lee version: del frontmatter del .md. Devuelve '' si no existe."""
-    with open(md_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    m = re.search(r'^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$', content, re.MULTILINE)
-    return m.group(1) if m else ""
+    """Read version: from the Markdown frontmatter."""
+    frontmatter = extract_frontmatter(md_path)
+    return extract_frontmatter_value(frontmatter, "version")
 
 
 def stamp_ts_version(ts_path: str, version: str) -> None:
-    """Escribe/actualiza la línea '// @teachme vX.Y.Z' en la cabecera del .ts."""
-    with open(ts_path, "r", encoding="utf-8") as f:
-        ts_content = f.read()
+    """Write or update the // @teachme vX.Y.Z header in an existing agent."""
+    with open(ts_path, "r", encoding="utf-8") as file:
+        ts_content = file.read()
     marker = f"// @teachme v{version}"
-    stamped = re.sub(r'^// @teachme v[0-9]+\.[0-9]+\.[0-9]+$', marker, ts_content,
-                     count=1, flags=re.MULTILINE)
-    if stamped == ts_content and not re.search(r'^// @teachme v[0-9]+\.[0-9]+\.[0-9]+$', ts_content, re.MULTILINE):
-        # No existía: insertar tras la primera línea (cabecera de comentario)
+    stamped = re.sub(
+        r"^// @teachme v[0-9]+\.[0-9]+\.[0-9]+$",
+        marker,
+        ts_content,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if stamped == ts_content and not re.search(
+        r"^// @teachme v[0-9]+\.[0-9]+\.[0-9]+$", ts_content, re.MULTILINE
+    ):
         lines = ts_content.split("\n")
         lines.insert(1, marker)
         stamped = "\n".join(lines)
-    with open(ts_path, "w", encoding="utf-8") as f:
-        f.write(stamped)
+    with open(ts_path, "w", encoding="utf-8") as file:
+        file.write(stamped)
 
 
 def extract_ts_version(ts_path: str) -> str:
-    """Lee la versión estampada en la cabecera del .ts ('' si no hay)."""
-    with open(ts_path, "r", encoding="utf-8") as f:
-        ts_content = f.read()
-    m = re.search(r'^// @teachme v([0-9]+\.[0-9]+\.[0-9]+)$', ts_content, re.MULTILINE)
-    return m.group(1) if m else ""
+    """Read the stamped version from an agent header."""
+    with open(ts_path, "r", encoding="utf-8") as file:
+        ts_content = file.read()
+    match = re.search(
+        r"^// @teachme v([0-9]+\.[0-9]+\.[0-9]+)$", ts_content, re.MULTILINE
+    )
+    return match.group(1) if match else ""
 
 
 def extract_md_content(md_path: str) -> str:
-    """Extrae el contenido del .md quitando el frontmatter YAML."""
-    with open(md_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    
+    """Extract Markdown content after the YAML frontmatter."""
+    with open(md_path, "r", encoding="utf-8") as file:
+        content = file.read()
+
     lines = content.split("\n")
-    in_frontmatter = False
-    fm_count = 0
-    result_lines = []
-    
-    for line in lines:
-        if line.strip() == "---":
-            fm_count += 1
-            if fm_count == 1:
-                in_frontmatter = True
-                continue
-            if fm_count == 2:
-                in_frontmatter = False
-                continue
-        if not in_frontmatter:
-            result_lines.append(line)
-    
-    return "\n".join(result_lines).strip()
+    frontmatter_end = None
+    if lines and lines[0].strip() == "---":
+        for index in range(1, len(lines)):
+            if lines[index].strip() == "---":
+                frontmatter_end = index
+                break
+
+    if frontmatter_end is None:
+        return content.strip()
+    return "\n".join(lines[frontmatter_end + 1 :]).strip()
+
 
 def sync_ts(ts_path: str, md_content: str) -> bool:
-    """Reemplaza el instructionsPrompt en el .ts con el contenido del .md."""
-    with open(ts_path, "r", encoding="utf-8") as f:
-        ts_content = f.read()
-    
-    # Escapar para template literal de TS
-    # Orden importante: backslashes primero, luego backticks, luego ${}
-    md_escaped = md_content
-    md_escaped = md_escaped.replace('\\', '\\\\')  # \ -> \\
-    md_escaped = md_escaped.replace('`', '\\`')      # ` -> \`
-    md_escaped = md_escaped.replace('${', '\\${')     # ${ -> \${
-    
-    # Encontrar instructionsPrompt: `...contenido...`
-    # IMPORTANTE: el contenido tiene backticks internos, así que no podemos
-    # usar un regex simple. Encontramos el start y buscamos el cierre manualmente.
-    start_pattern = r'instructionsPrompt:\s*`'
-    start_match = re.search(start_pattern, ts_content)
+    """Replace instructionsPrompt in an existing TypeScript agent."""
+    with open(ts_path, "r", encoding="utf-8") as file:
+        ts_content = file.read()
+
+    md_escaped = escape_ts_template(md_content)
+    start_match = re.search(r"instructionsPrompt:\s*`", ts_content)
     if not start_match:
         print("ERROR: No se encontró instructionsPrompt en el .ts")
         return False
-    
-    start_pos = start_match.end()  # posición después del backtick de apertura
-    
-    # Buscar el cierre: backtick seguido de coma y cierre de objeto
-    # El patrón de cierre es `, al final del instructionsPrompt
-    # Buscamos hacia atrás desde el final del archivo
-    end_pattern = r'`,\s*$'
-    end_matches = list(re.finditer(end_pattern, ts_content[start_pos:], re.MULTILINE))
+
+    start_pos = start_match.end()
+    end_matches = list(re.finditer(r"`,\s*$", ts_content[start_pos:], re.MULTILINE))
     if not end_matches:
         print("ERROR: No se encontró el cierre de instructionsPrompt")
         return False
-    
-    # El último match es el cierre correcto
-    end_match = end_matches[-1]
-    end_pos = start_pos + end_match.start()
-    
-    # Reemplazar solo el contenido entre backticks
+
+    end_pos = start_pos + end_matches[-1].start()
     new_ts = ts_content[:start_pos] + md_escaped + ts_content[end_pos:]
-    
-    # Guardar
-    with open(ts_path, "w", encoding="utf-8") as f:
-        f.write(new_ts)
-    
+    with open(ts_path, "w", encoding="utf-8") as file:
+        file.write(new_ts)
     return True
+
+
 def verify_ts_syntax(ts_path: str) -> bool:
-    """Verifica la sintaxis del .ts con node --check."""
-    import subprocess
+    """Verify TypeScript/JavaScript syntax with Node."""
     result = subprocess.run(
         ["node", "--check", ts_path],
         capture_output=True,
-        text=True
+        text=True,
     )
     return result.returncode == 0
 
+
 def extract_ts_content(ts_path: str) -> str:
-    """Extrae el contenido del instructionsPrompt del .ts."""
-    with open(ts_path, "r", encoding="utf-8") as f:
-        ts_content = f.read()
-    start_pattern = r'instructionsPrompt:\s*`'
-    start_match = re.search(start_pattern, ts_content)
+    """Extract instructionsPrompt from an existing TypeScript agent."""
+    with open(ts_path, "r", encoding="utf-8") as file:
+        ts_content = file.read()
+    start_match = re.search(r"instructionsPrompt:\s*`", ts_content)
     if not start_match:
         return ""
+
     start_pos = start_match.end()
-    end_pattern = r'`,\s*$'
-    end_matches = list(re.finditer(end_pattern, ts_content[start_pos:], re.MULTILINE))
+    end_matches = list(re.finditer(r"`,\s*$", ts_content[start_pos:], re.MULTILINE))
     if not end_matches:
         return ""
-    end_match = end_matches[-1]
-    end_pos = start_pos + end_match.start()
+
+    end_pos = start_pos + end_matches[-1].start()
     raw = ts_content[start_pos:end_pos]
-    # Des-escapar: revertir lo que hace sync_ts
-    raw = raw.replace('\\${', '${')
-    raw = raw.replace('\\`', '`')
-    raw = raw.replace('\\\\', '\\')
+    raw = raw.replace("\\${", "${")
+    raw = raw.replace("\\`", "`")
+    raw = raw.replace("\\\\", "\\")
     return raw.strip()
 
+
 def check_sync(md_path: str, ts_path: str) -> bool:
-    """Compara .md vs .ts normalizados. Retorna True si están en sync."""
+    """Return whether the Markdown and TypeScript prompts are synchronized."""
     md_content = extract_md_content(md_path).strip()
     ts_content = extract_ts_content(ts_path).strip()
-    # Normalizar saltos de línea y espacios finales
     md_norm = "\n".join(line.rstrip() for line in md_content.splitlines()).strip()
     ts_norm = "\n".join(line.rstrip() for line in ts_content.splitlines()).strip()
     return md_norm == ts_norm
 
-def main():
+
+def main() -> None:
     script_dir = Path(__file__).parent
     md_file = script_dir / ".agents" / "teachme.md"
     ts_file = Path.home() / ".agents" / "teachme.ts"
 
-    # --help
+    if "--output" in sys.argv:
+        output_index = sys.argv.index("--output") + 1
+        if output_index >= len(sys.argv):
+            print("ERROR: --output requiere una ruta")
+            sys.exit(1)
+        ts_file = Path(sys.argv[output_index]).expanduser()
+
     if "--help" in sys.argv or "-h" in sys.argv:
         print("Uso: sync_helper.py [opción]")
         print("")
         print("Opciones:")
         print("  (sin args)    Sincronizar .md → .ts")
         print("  --check       Verificar si .md y .ts están sincronizados (exit 0=ok, 1=desincronizado)")
-        print("  --version     Mostrar la versión de la fuente y de la instalada")
+        print("  --generate    Generar el .ts instalado desde el .md")
+        print("  --output PATH Escribir el .ts generado en PATH (opcional)")
+        print("  --version     Mostrar la versión de la fuente y la instalada")
         print("  --dry-run     Mostrar qué se sincronizaría sin cambiar nada")
         print("  --help, -h    Muestra esta ayuda")
         return
 
-    # Modo version
+    if not md_file.exists():
+        print(f"ERROR: No se encontró: {md_file}")
+        sys.exit(1)
+
     if "--version" in sys.argv or "-v" in sys.argv:
         md_ver = extract_md_version(str(md_file))
         ts_ver = extract_ts_version(str(ts_file)) if ts_file.exists() else ""
@@ -184,69 +303,66 @@ def main():
         print("[OK] Versiones coinciden" if md_ver == ts_ver else "[OK] Version de fuente declarada")
         return
 
-    backup_file = ts_file.with_suffix(".ts.bak")
-    
-    # Verificar archivos
-    if not md_file.exists():
-        print(f"ERROR: No se encontró: {md_file}")
-        sys.exit(1)
-    
+    if "--generate" in sys.argv:
+        try:
+            generate_ts(str(md_file), str(ts_file))
+        except (OSError, ValueError) as error:
+            print(f"ERROR: No se pudo generar el .ts: {error}")
+            sys.exit(1)
+        if not verify_ts_syntax(str(ts_file)):
+            print("ERROR: El .ts generado tiene errores de sintaxis")
+            sys.exit(1)
+        print(f"Agente generado: {ts_file}")
+        print("Sintaxis del .ts correcta")
+        return
+
     if not ts_file.exists():
         print(f"ERROR: No se encontró: {ts_file}")
-        print("Ejecuta ./install.sh primero para instalar el agente")
+        print("Ejecuta ./install.sh para generar e instalar el agente")
         sys.exit(1)
 
-    # Modo check
     if "--check" in sys.argv:
         if check_sync(str(md_file), str(ts_file)):
             print("[OK] Sincronizado: .md y .ts coinciden")
             sys.exit(0)
-        else:
-            print("[FAIL] Desincronizado: .md y .ts NO coinciden")
-            print("  Ejecuta: ./sync-md-ts.sh  para sincronizar")
-            md_lines = extract_md_content(str(md_file)).splitlines()
-            ts_lines = extract_ts_content(str(ts_file)).splitlines()
-            print(f"  .md: {len(md_lines)} lineas | .ts instructionsPrompt: {len(ts_lines)} lineas")
-            sys.exit(1)
-    
-    # Modo dry-run
+        print("[FAIL] Desincronizado: .md y .ts NO coinciden")
+        print("  Ejecuta: ./sync-md-ts.sh  para sincronizar")
+        md_lines = extract_md_content(str(md_file)).splitlines()
+        ts_lines = extract_ts_content(str(ts_file)).splitlines()
+        print(f"  .md: {len(md_lines)} lineas | .ts instructionsPrompt: {len(ts_lines)} lineas")
+        sys.exit(1)
+
     if "--dry-run" in sys.argv:
         print("Dry run - sin cambios\n")
-        md_content = extract_md_content(str(md_file))
-        lines = md_content.split("\n")
-        for line in lines[:30]:
+        md_lines = extract_md_content(str(md_file)).split("\n")
+        for line in md_lines[:30]:
             print(line)
-        if len(lines) > 30:
+        if len(md_lines) > 30:
             print("...")
-        print(f"\nTotal: {len(lines)} líneas")
+        print(f"\nTotal: {len(md_lines)} líneas")
         return
-    
-    # Crear backup
+
+    backup_file = ts_file.with_suffix(".ts.bak")
     import shutil
+
     shutil.copy2(ts_file, backup_file)
     print(f"Backup creado: {backup_file}")
-    
-    # Extraer contenido del .md
     md_content = extract_md_content(str(md_file))
     if not md_content:
         print("ERROR: El contenido del .md está vacío")
         sys.exit(1)
-    
-    # Sincronizar
-    if sync_ts(str(ts_file), md_content):
-        print("instructionsPrompt actualizado")
-    else:
+
+    if not sync_ts(str(ts_file), md_content):
         print("Error durante la sincronizacion")
         shutil.copy2(backup_file, ts_file)
         sys.exit(1)
-    
-    # Estampar la version en la cabecera del .ts
+
+    print("instructionsPrompt actualizado")
     version = extract_md_version(str(md_file))
     if version:
         stamp_ts_version(str(ts_file), version)
         print(f"Version estampada: @teachme v{version}")
-    
-    # Verificar sintaxis
+
     if verify_ts_syntax(str(ts_file)):
         print("Sintaxis del .ts correcta")
     else:
@@ -254,8 +370,9 @@ def main():
         print("Restaurando backup...")
         shutil.copy2(backup_file, ts_file)
         sys.exit(1)
-    
+
     print("\nSincronizacion completada")
+
 
 if __name__ == "__main__":
     main()
