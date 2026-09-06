@@ -2,130 +2,89 @@
 
 ![TeachMe — Socratic teaching agent architecture](docs/images/hero.png)
 
-![Version](https://img.shields.io/badge/version-1.2.1-brightgreen) [![Freebuff](https://img.shields.io/badge/powered_by-Freebuff-orange)](https://github.com/nicholasgriffintn/Freebuff) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Version](https://img.shields.io/badge/version-1.2.1-brightgreen) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-# 🧠 TeachMe — Socratic Teaching Agent `v1.2.1`
+# 🧠 TeachMe — Socratic Teaching Agent
 
 > **The one-liner:** Nothing to memorize — the agent builds a dependency graph in your head. Unconditional truths first, each fact hanging from what you already understand, and a 2-question quiz after every block to confirm the node is solid before building on top.
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-- [Two Modes](#two-modes)
+- [Installation](#installation)
+- [Compatibility](#compatibility)
+- [How It Works](#how-it-works)
 - [Learning Flow](#learning-flow)
 - [Vault Output](#vault-output)
-- [Customization](#customization)
-- [Scripts & Tools](#scripts--tools)
-- [Testing](#testing)
-- [Versioning](#versioning)
-- [Changelog](#changelog)
+- [Skill Structure](#skill-structure)
 - [Contributing](#contributing)
+- [License](#license)
 
-## Prerequisites
+## Installation
 
-- **Node.js** ≥ 18 (Freebuff needs it — the bootstrap script installs it if missing)
-- **Freebuff** installed ([repo](https://github.com/nicholasgriffintn/Freebuff))
-- **Python** 3 (used to generate and synchronize the agent)
-- **Obsidian** (optional): for rendering Mermaid, LaTeX, and callouts in the learning vault
+TeachMe is a **skill** — a single `SKILL.md` file that any compatible AI coding agent can load.
 
-## Quick Start
-
-### Option A — One command (recommended)
+### 1. Clone the repo
 
 ```bash
-cd teachme
-./bootstrap.sh
+git clone https://github.com/mikelrh-dev/teachme.git
 ```
 
-One command, everything ready: installs Node.js and Freebuff if missing, copies or generates the agent at `~/.agents/teachme.ts`, verifies syntax and `.md ↔ .ts` sync, and runs integrity tests. It is idempotent — run it as many times as you want.
+### 2. Copy the skill to your agent's skills directory
 
-Other commands:
+| Agent | Destination |
+|-------|-------------|
+| **Claude Code** | `~/.agents/skills/teachme/SKILL.md` |
+| **OpenCode** | `~/.config/opencode/skills/teachme/SKILL.md` |
+| **Codex / Cursor / other** | See your agent's docs for the skills folder path |
+
+Example for Claude Code:
 
 ```bash
-./bootstrap.sh --check      # Verify only (no changes)
-./bootstrap.sh --uninstall  # Remove the agent
+mkdir -p ~/.agents/skills/teachme
+cp teachme/SKILL.md ~/.agents/skills/teachme/SKILL.md
 ```
 
-### Option B — Manual installation
+### 3. Verify
 
-```bash
-# Install from the canonical Markdown source
-./install.sh
-
-# The installer generates ~/.agents/teachme.ts when the local .ts source is absent
-node --check ~/.agents/teachme.ts
-```
-
-### Verification
-
-1. Open Freebuff in this folder:
-   ```bash
-   cd teachme
-   freebuff
-   ```
-2. Type:
-   ```
-   @teachme teach me what a hash is
-   ```
-3. If it responds and starts the probe → installed correctly
-
-### Repository Structure
+Restart your agent session. Then type:
 
 ```
-~/.agents/
-└── teachme.ts          ← the active agent (Freebuff loads it)
-
-teachme/
-├── .agents/
-│   └── teachme.md      ← canonical agent source
-├── bootstrap.sh              ← one-command install
-├── install.sh                ← classic install (agent only)
-├── sync-md-ts.sh             ← syncs .md → .ts
-├── test.sh                   ← integrity tests
-├── templates/                ← vault schema
-├── LEARNING_LOG.md           ← your data (gitignored)
-├── visuals/                  ← your data (gitignored)
-├── docs/images/              ← README visual assets
-└── hash-vault/               ← example vault (gitignored)
+@teachme teach me what a hash is
 ```
 
-> **Note:** `LEARNING_LOG.md`, `visuals/`, and `*-vault/` are **your learning data** — they are gitignored and never pushed to GitHub. What gets published is the system: agent, scripts, templates, and docs.
+If it responds and starts the probe → installed correctly.
 
-## Architecture
+## Compatibility
 
-![TeachMe architecture: Freebuff loads teachme agent, outputs to LEARNING_LOG.md](docs/images/architecture.png)
+TeachMe works with any agent that supports loading skills from a `SKILL.md` file:
 
-Freebuff is the runtime. TeachMe is the agent it loads. The flow is:
+| Agent | Status |
+|-------|--------|
+| Claude Code | ✅ Native (`~/.agents/skills/`) |
+| OpenCode | ✅ Native (`~/.config/opencode/skills/`) |
+| Codex | ✅ Via skills directory |
+| Cursor | ✅ Via rules / skills |
+| Other LLM agents | ✅ If they load `.md` instruction files |
 
-1. Freebuff starts a session in a folder
-2. It discovers `~/.agents/teachme.ts` and loads the agent
-3. The agent detects the mode (VAULT or REPO) from the current directory
-4. It probes your level, builds a plan, teaches block by block
-5. Everything is written to `LEARNING_LOG.md` with Mermaid diagrams in `./visuals/`
+**Requirements:** An LLM agent with tool access (web search, file read/write). No Node.js, Python, or other runtimes needed — the skill is pure Markdown instructions.
 
-## Two Modes
+## How It Works
 
-![VAULT mode learns topics; REPO mode learns codebases](docs/images/modes.png)
-
-The agent detects which mode automatically based on the current directory.
+The agent detects which mode to use automatically based on the current directory:
 
 | | **VAULT** | **REPO** |
 |---|---|---|
 | **Purpose** | Learn a general topic (HTTPS, hashes, networking…) | Absorb the code of an existing project |
 | **How to invoke** | `@teachme teach me X` | `@teachme I want to absorb this codebase` |
-| **Where to open Freebuff** | In this folder (`teachme`) | Inside the repo you want to learn |
+| **Where to open the agent** | Any folder | Inside the repo you want to learn |
 | **What it reads** | Agent knowledge + web verification | Repo files (`read_files`) |
-| **How it teaches** | Abstract concepts + Mermaid | Literal snippets (`file:line`) |
-| **Where the log lands** | `teachme/LEARNING_LOG.md` | In the repo (or centralized vault) |
+| **How it teaches** | Abstract concepts + Mermaid diagrams | Literal snippets (`file:line`) |
+| **Where the log lands** | `LEARNING_LOG.md` in cwd | In the repo (or a centralized vault) |
 
 > **How does it know which mode?**
-> **Code-first signals:** if the current directory has a `package.json`, `go.mod`, `Cargo.toml`, `pyproject.toml`, or a `.git` with source code → **REPO MODE**. If it is not a code project but a `LEARNING_LOG.md` with our frontmatter already exists → **VAULT MODE** (resuming a session). If neither code nor log exists → **VAULT MODE** (new session).
+> **Code-first signals:** if the current directory has a `package.json`, `go.mod`, `Cargo.toml`, `pyproject.toml`, or a `.git` with source code → **REPO MODE**. If it is not a code project but a `LEARNING_LOG.md` with the skill's frontmatter already exists → **VAULT MODE** (resuming a session). If neither code nor log exists → **VAULT MODE** (new session).
 
 ## Learning Flow
-
-![Learning cycle: probe, plan, teach, quiz](docs/images/flow.png)
 
 Every session follows the same cycle:
 
@@ -135,80 +94,40 @@ Every session follows the same cycle:
 | **Plan** | Proposes curriculum + dependency map (Mermaid) | Review and give the OK (or adjust scope) |
 | **Teach** | Block by block: motivate → establish → connect → **2-question quiz** | Attempt the quiz seriously; if you fail, the node is repaired before moving on |
 
-## Vault Output
+The quiz uses exactly **2 questions per block**, each with 3 options (including "I don't know"). Failed nodes are repaired before building on top — no weak foundations.
 
-![Vault output: LEARNING_LOG.md with diagrams](docs/images/vault.png)
+## Vault Output
 
 When the session ends, everything is in `LEARNING_LOG.md`:
 
 - Full lesson with Mermaid diagrams
 - Quiz results (question + your answer + verdict ✓/✗)
+- Flashcards for spaced repetition (Obsidian Spaced Repetition plugin)
 - Dependency graph showing which nodes are solid and which need reinforcement
 
 Open the folder in Obsidian and the log renders with native Mermaid, LaTeX, and callouts.
 
-> **New session:** Agents load at session start. After installing or editing `teachme.ts`, open a **new** Freebuff session for changes to take effect.
+**Optional vault generation:** at the end of a complete topic, the agent can generate an Obsidian vault with theory notes, review schemas, and diagrams organized by block.
 
-## Customization
-
-Edit the canonical source, then sync:
-
-1. Edit `.agents/teachme.md` (the canonical source)
-2. Run `./sync-md-ts.sh` (copies changes from `.md` to the global `.ts`)
-3. Open a **new** Freebuff session
-
-> **Do not edit `~/.agents/teachme.ts` directly** — it will be overwritten on the next sync.
-
-## Scripts & Tools
-
-| Script | What it does |
-|--------|--------------|
-| `./bootstrap.sh` | One-command install (Node + Freebuff + agent + verification) |
-| `./bootstrap.sh --check` | Verify installation without changes |
-| `./install.sh` | Install agent only (classic) |
-| `./install.sh --check` | Verify installation |
-| `./sync-md-ts.sh` | Sync `.md` → `.ts` |
-| `./sync-md-ts.sh --dry-run` | Show what would be synced |
-| `./test.sh` | Run integrity tests |
-
-## Testing
-
-```bash
-./test.sh    # Verify files, syntax, configuration, and scripts
-```
-
-Expected result:
+## Skill Structure
 
 ```
-✓ Passed: 43
-✗ Failed: 0
-○ Skipped: 0
+teachme/
+├── SKILL.md              ← The skill (this is the only file that matters)
+├── README.md             ← This file (English)
+├── README.es.md          ← This file (Spanish)
+├── templates/            ← Vault schema templates
+├── docs/images/          ← README visual assets
+└── CHANGELOG.md          ← Version history
 ```
 
-## Versioning
-
-The agent uses semantic versioning. The canonical version lives in `.agents/teachme.md` frontmatter (`version:`) and is stamped into the installed `.ts` header on sync.
-
-```bash
-./bootstrap.sh --version      # Show source and installed versions
-./sync-md-ts.sh               # Sync and stamp the version
-```
-
-Policy (details in `CHANGELOG.md`):
-
-- **PATCH** — wording fixes with no behavior change.
-- **MINOR** — new rule or feature.
-- **MAJOR** — breaking change (log format, process).
-
-When editing the agent: bump `version:` in frontmatter, add an entry in `CHANGELOG.md`, sync, and open a new Freebuff session.
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for the full history.
+The entire skill lives in `SKILL.md`. Everything else is documentation and templates.
 
 ## Contributing
 
-Contributions are welcome. Fork the repo, create a feature branch, and open a pull request. Run `./test.sh` before submitting.
+Contributions are welcome. Fork the repo, create a feature branch, and open a pull request.
+
+When editing the skill, keep `SKILL.md` concise (target: 180–450 tokens for the core instructions). Put supporting material in `templates/` or `references/`, not in the main skill body.
 
 ---
 
