@@ -16,6 +16,7 @@
 - [Flujo de Aprendizaje](#flujo-de-aprendizaje)
 - [Salida del Vault](#salida-del-vault)
 - [Estructura de la Skill](#estructura-de-la-skill)
+- [Desinstalación](#desinstalación)
 - [Contribuir](#contribuir)
 - [Licencia](#licencia)
 
@@ -121,6 +122,16 @@ teachme/
 ```
 
 Toda la skill vive en `SKILL.md`. Todo lo demás es documentación.
+
+## Desinstalación
+
+Borrá la carpeta de la skill del directorio de skills de tu agente y reiniciá la sesión:
+
+```bash
+rm -rf ~/.agents/skills/teachme   # Claude Code (ajustá la ruta según tu agente)
+```
+
+Tus datos de aprendizaje (`LEARNING_LOG.md`, `visuals/`) son tuyos y no se tocan — solo se elimina la skill.
 
 ## Contribuir
 

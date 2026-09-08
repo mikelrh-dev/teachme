@@ -16,6 +16,7 @@
 - [Learning Flow](#learning-flow)
 - [Vault Output](#vault-output)
 - [Skill Structure](#skill-structure)
+- [Uninstallation](#uninstallation)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -121,6 +122,16 @@ teachme/
 ```
 
 The entire skill lives in `SKILL.md`. Everything else is documentation.
+
+## Uninstallation
+
+Delete the skill folder from your agent's skills directory and restart the session:
+
+```bash
+rm -rf ~/.agents/skills/teachme   # Claude Code (adjust the path for your agent)
+```
+
+Your learning data (`LEARNING_LOG.md`, `visuals/`) is yours and stays untouched — only the skill is removed.
 
 ## Contributing
 

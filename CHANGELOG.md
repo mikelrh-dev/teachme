@@ -69,3 +69,19 @@ Cada cambio debe: (1) subir la versión aquí y en el frontmatter, (2) pasar por
 - Detección de modo (señales de código primero).
 - Nombres únicos de visuals por bloque (`-b<n>.mmd`).
 - Log append-only vía `str_replace` anclado (sin reescritura completa).
+
+## [1.3.0] — 2026-09-08
+
+### Changed
+
+- **Skill genérica (host-agnóstica)** — `SKILL.md` reescrita para funcionar en
+  cualquier host (Claude Code, OpenCode, Codex, Cursor, etc.). Eliminadas todas
+  las referencias a Freebuff; herramientas de host descritas genéricamente
+  ("tu herramienta de lectura de archivos", "pregunta al usuario", etc.).
+  Reglas pedagógicas y formato de vault preservados íntegramente.
+
+### Removed
+
+- Archivos legacy: `.agents/teachme.md`, `bootstrap.sh`, `install.sh`,
+  `sync-md-ts.sh`, `sync_helper.py`, `__pycache__/`, `create-vault.sh`,
+  `test.sh`, `test_output.txt`, `MEJORAS_SESION.md` (recuperables por git).
