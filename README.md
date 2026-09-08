@@ -116,18 +116,17 @@ teachme/
 ├── SKILL.md              ← The skill (this is the only file that matters)
 ├── README.md             ← This file (English)
 ├── README.es.md          ← This file (Spanish)
-├── templates/            ← Vault schema templates
 ├── docs/images/          ← README visual assets
 └── CHANGELOG.md          ← Version history
 ```
 
-The entire skill lives in `SKILL.md`. Everything else is documentation and templates.
+The entire skill lives in `SKILL.md`. Everything else is documentation.
 
 ## Contributing
 
 Contributions are welcome. Fork the repo, create a feature branch, and open a pull request.
 
-When editing the skill, keep `SKILL.md` concise (target: 180–450 tokens for the core instructions). Put supporting material in `templates/` or `references/`, not in the main skill body.
+When editing the skill, keep `SKILL.md` concise (target: 180–450 tokens for the core instructions). Put supporting material in `references/`, not in the main skill body.
 
 ---
 
