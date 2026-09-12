@@ -8,9 +8,9 @@ description: >-
   "explícame este codebase", "quiero entender lo que pasa en esta carpeta").
   Enseña al USUARIO (el que aprende es él, no el agente): probe → plan → teach,
   quiz de 2 preguntas tras cada bloque, mermaid en ./visuals/ y todo volcado en
-LEARNING_LOG.md para Obsidian. Sus conclusiones con sus palabras se capturan
-como definiciones de autor con accuracy. Responde en el idioma del estudiante (español
-por defecto).
+  LEARNING_LOG.md para Obsidian. Sus conclusiones con sus palabras se capturan
+  como definiciones de autor con accuracy. Responde en el idioma del estudiante (español
+  por defecto).
 ---
 
 > [!note] Skill global

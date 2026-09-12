@@ -2,11 +2,31 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/) · Versionado: [semver](https://semver.org/).
 
-La versión canónica vive en el frontmatter de `.agents/teachme.md` (`version:`).
-Cada cambio debe: (1) subir la versión aquí y en el frontmatter, (2) pasar por
-`./sync-md-ts.sh` para estamparse en el `.ts` instalado.
+La versión canónica del contenido vive en `SKILL.md` (edición genérica
+multi-host). Cada cambio debe: (1) subir la versión aquí y en la cabecera del
+`.ts` instalado (`~/.agents/teachme.ts`), (2) regenerar el agente desde la
+fuente con `.atl/gen-teachme-ts.py` (verificación de round-trip incluida).
 
-## [Unreleased]
+## [1.3.1] — 2026-09-09
+
+### Changed
+
+- **Fuente canónica**: `SKILL.md` queda como única fuente del contenido; el
+  `.ts` instalado se genera desde ella (la referencia a `.agents/teachme.md`
+  en el preamble era errónea desde `86ae5d2`).
+- **Agente desincronizado**: `~/.agents/teachme.ts` seguía en v1.2.1 mientras
+  el repo avanzó a la edición genérica. Regenerado (v1.3.1) desde `SKILL.md`
+  con verificación de round-trip byte a byte; backup del agente anterior en
+  `~/.agents/teachme.ts.bak`.
+
+### Fixed
+
+- **Reinstalador**: nuevo generador one-shot `.atl/gen-teachme-ts.py`
+  sustituye al `sync-md-ts.sh` eliminado; escritura vía base64 para evitar
+  errores de encoding en consolas Windows `cp1252` y verificación de que el
+  contenido de `SKILL.md` es recuperable exacto desde el `.ts`.
+- **Referencias rotas**: preamble del CHANGELOG actualizado; badges de
+  versión de `README.md` y `README.es.md` pasan a 1.3.1.
 
 ### Added
 
@@ -16,6 +36,22 @@ Cada cambio debe: (1) subir la versión aquí y en el frontmatter, (2) pasar por
   de sincronización bilingual al pie de cada archivo.
 - **Assets visuales** — 5 imágenes generadas en `docs/images/` (hero,
   architecture, modes, flow, vault) referenciadas en ambos README.
+
+## [1.3.0] — 2026-09-08
+
+### Changed
+
+- **Skill genérica (host-agnóstica)** — `SKILL.md` reescrita para funcionar en
+  cualquier host (Claude Code, OpenCode, Codex, Cursor, etc.). Eliminadas todas
+  las referencias a Freebuff; herramientas de host descritas genéricamente
+  ("tu herramienta de lectura de archivos", "pregunta al usuario", etc.).
+  Reglas pedagógicas y formato de vault preservados íntegramente.
+
+### Removed
+
+- Archivos legacy: `.agents/teachme.md`, `bootstrap.sh`, `install.sh`,
+  `sync-md-ts.sh`, `sync_helper.py`, `__pycache__/`, `create-vault.sh`,
+  `test.sh`, `test_output.txt`, `MEJORAS_SESION.md` (recuperables por git).
 
 ## [1.2.1] — 2026-09-03
 
@@ -69,19 +105,3 @@ Cada cambio debe: (1) subir la versión aquí y en el frontmatter, (2) pasar por
 - Detección de modo (señales de código primero).
 - Nombres únicos de visuals por bloque (`-b<n>.mmd`).
 - Log append-only vía `str_replace` anclado (sin reescritura completa).
-
-## [1.3.0] — 2026-09-08
-
-### Changed
-
-- **Skill genérica (host-agnóstica)** — `SKILL.md` reescrita para funcionar en
-  cualquier host (Claude Code, OpenCode, Codex, Cursor, etc.). Eliminadas todas
-  las referencias a Freebuff; herramientas de host descritas genéricamente
-  ("tu herramienta de lectura de archivos", "pregunta al usuario", etc.).
-  Reglas pedagógicas y formato de vault preservados íntegramente.
-
-### Removed
-
-- Archivos legacy: `.agents/teachme.md`, `bootstrap.sh`, `install.sh`,
-  `sync-md-ts.sh`, `sync_helper.py`, `__pycache__/`, `create-vault.sh`,
-  `test.sh`, `test_output.txt`, `MEJORAS_SESION.md` (recuperables por git).

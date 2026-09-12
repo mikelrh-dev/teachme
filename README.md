@@ -2,7 +2,7 @@
 
 ![TeachMe — Socratic teaching agent architecture](docs/images/hero.png)
 
-![Version](https://img.shields.io/badge/version-1.2.1-brightgreen) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Version](https://img.shields.io/badge/version-1.3.1-brightgreen) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 # 🧠 TeachMe — Socratic Teaching Agent
 
@@ -45,9 +45,13 @@ mkdir -p ~/.agents/skills/teachme
 cp teachme/SKILL.md ~/.agents/skills/teachme/SKILL.md
 ```
 
-### 3. Verify
+### 3. Restart your agent session
 
-Restart your agent session. Then type:
+Skills load once at startup — there is no hot-reload. You MUST restart your agent session for the skill to be picked up.
+
+### 4. Verify
+
+Then type:
 
 ```
 @teachme teach me what a hash is
@@ -76,7 +80,7 @@ The agent detects which mode to use automatically based on the current directory
 | | **VAULT** | **REPO** |
 |---|---|---|
 | **Purpose** | Learn a general topic (HTTPS, hashes, networking…) | Absorb the code of an existing project |
-| **How to invoke** | `@teachme teach me X` | `@teachme I want to absorb this codebase` |
+| **How to invoke** | `@teachme teach me X` | `@teachme teach me this repo` / `explain this codebase` / `I want to understand what happens in this folder` |
 | **Where to open the agent** | Any folder | Inside the repo you want to learn |
 | **What it reads** | Agent knowledge + web verification | Repo files (`read_files`) |
 | **How it teaches** | Abstract concepts + Mermaid diagrams | Literal snippets (`file:line`) |
@@ -115,13 +119,16 @@ Open the folder in Obsidian and the log renders with native Mermaid, LaTeX, and 
 ```
 teachme/
 ├── SKILL.md              ← The skill (this is the only file that matters)
+├── templates/            ← Schema extracts referenced by the skill
+│   ├── vault-schema.md   ← Vault structure, page types, frontmatters, templates
+│   └── esquema-schema.md ← Compact single-file review schema
 ├── README.md             ← This file (English)
 ├── README.es.md          ← This file (Spanish)
 ├── docs/images/          ← README visual assets
 └── CHANGELOG.md          ← Version history
 ```
 
-The entire skill lives in `SKILL.md`. Everything else is documentation.
+The entire skill lives in `SKILL.md`. The `templates/` directory contains schema extracts that the skill references. Other files in this repo (`hash-vault/`, `visuals/`, `LEARNING_LOG.md`, `.atl/`) are examples and tooling — not part of the installed skill.
 
 ## Uninstallation
 
@@ -137,7 +144,7 @@ Your learning data (`LEARNING_LOG.md`, `visuals/`) is yours and stays untouched 
 
 Contributions are welcome. Fork the repo, create a feature branch, and open a pull request.
 
-When editing the skill, keep `SKILL.md` concise (target: 180–450 tokens for the core instructions). Put supporting material in `references/`, not in the main skill body.
+When editing the skill, keep `SKILL.md` focused and actionable. Note: TeachMe's SKILL.md is ~652 lines (~3000 tokens) — it intentionally exceeds generic style-guide budgets because the pedagogical workflow, decision gates, and quality checklist require comprehensive in-context instructions. Put supporting material in `references/` when possible, but do not sacrifice completeness for brevity.
 
 ---
 

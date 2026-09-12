@@ -2,7 +2,7 @@
 
 ![TeachMe — Arquitectura del agente de enseñanza socrática](docs/images/hero.png)
 
-![Versión](https://img.shields.io/badge/version-1.2.1-brightgreen) [![Licencia: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Versión](https://img.shields.io/badge/version-1.3.1-brightgreen) [![Licencia: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 # 🧠 TeachMe — Agente de Enseñanza Socrático
 
@@ -45,9 +45,13 @@ mkdir -p ~/.agents/skills/teachme
 cp teachme/SKILL.md ~/.agents/skills/teachme/SKILL.md
 ```
 
-### 3. Verificación
+### 3. Reiniciá la sesión de tu agente
 
-Reinicia la sesión de tu agente. Luego escribí:
+Las skills se cargan una vez al inicio — no hay hot-reload. DEBÉS reiniciar la sesión de tu agente para que la skill se detecte.
+
+### 4. Verificación
+
+Luego escribí:
 
 ```
 @teachme enseñame qué es un hash
@@ -76,7 +80,7 @@ El agente detecta automáticamente qué modo usar según el directorio actual:
 | | **VAULT** | **REPO** |
 |---|---|---|
 | **Propósito** | Aprender un tema general (HTTPS, hashes, redes…) | Absorber el código de un proyecto existente |
-| **Cómo invocarlo** | `@teachme enseñame X` | `@teachme quiero absorber este codebase` |
+| **Cómo invocarlo** | `@teachme enseñame X` | `@teachme enseñame este repo` / `explícame este codebase` / `quiero entender lo que pasa en esta carpeta` |
 | **Dónde abrir el agente** | En cualquier carpeta | Dentro del repo que quieres aprender |
 | **Qué lee** | Conocimiento del agente + verificación web | Archivos del repo (`read_files`) |
 | **Cómo enseña** | Conceptos abstractos + diagramas Mermaid | Fragmentos literales (`file:line`) |
@@ -115,13 +119,16 @@ Abre la carpeta en Obsidian y el log se renderiza con Mermaid, LaTeX y callouts 
 ```
 teachme/
 ├── SKILL.md              ← La skill (este es el único archivo que importa)
+├── templates/            ← Extractos de schema que la skill referencia
+│   ├── vault-schema.md   ← Estructura del vault, tipos de página, frontmatters, templates
+│   └── esquema-schema.md ← Schema compacto de repaso rápido
 ├── README.md             ← Este archivo (inglés)
 ├── README.es.md          ← Este archivo (español)
 ├── docs/images/          ← Assets visuales del README
 └── CHANGELOG.md          ← Historial de versiones
 ```
 
-Toda la skill vive en `SKILL.md`. Todo lo demás es documentación.
+Toda la skill vive en `SKILL.md`. El directorio `templates/` contiene extractos de schema que la skill referencia. Otros archivos en este repo (`hash-vault/`, `visuals/`, `LEARNING_LOG.md`, `.atl/`) son ejemplos y tooling — no forman parte de la skill instalable.
 
 ## Desinstalación
 
@@ -137,7 +144,7 @@ Tus datos de aprendizaje (`LEARNING_LOG.md`, `visuals/`) son tuyos y no se tocan
 
 Las contribuciones son bienvenidas. Haz fork del repo, creá una rama de funcionalidad y abrí una pull request.
 
-Al editar la skill, mantené `SKILL.md` conciso (objetivo: 180–450 tokens para las instrucciones principales). Poné el material de apoyo en `references/`, no en el cuerpo principal de la skill.
+Al editar la skill, mantené `SKILL.md` enfocado y accionable. Nota: el SKILL.md de TeachMe tiene ~652 líneas (~3000 tokens) — excede intencionalmente los presupuestos genéricos de tokens porque el flujo pedagógico, las puertas de decisión y la checklist de calidad requieren instrucciones completas en contexto. Poné el material de apoyo en `references/` cuando sea posible, pero no sacrifiques completitud por brevedad.
 
 ---
 
